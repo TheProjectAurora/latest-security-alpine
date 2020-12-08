@@ -9,7 +9,6 @@ rm -f alpine_is_upgraded
 ###  alpine                                                 3.11                f70734b6a266        7 months ago        5.61MB
 ###  ecr/docker_hub_alpine                                  previous_latest     f70734b6a266        7 months ago        5.61MB
 
-
 ECR_REPO="ecr"
 ECR_CUSTOMER="customer"
 
@@ -39,17 +38,22 @@ upgrade_alpine_images () {
     echo "export BUILD_TIMESTAMP=$(date)" | tee -a alpine_information.sh
     echo "export BUILD_JOB=PIPELINE JOB NUMBER HERE" | tee -a alpine_information.sh
     #BAKE ${ECR_REPO}/customer_alpine:${alpine_version}
+    echo '#!/bin/sh' > push_to_ecr.sh
+    echo "set -xe" >> push_to_ecr.sh
+    echo "# EXECUTE https://github.com/aquasecurity/trivy BEFORE PUSH => Use push_to_ecr.sh to push." >> push_to_ecr.sh
+    echo "# Trivy have to be executed against ${ECR_REPO}/${ECR_CUSTOMER}_alpine:latest AND ${ECR_REPO}/docker_hub_alpine:latest then all image hasts are handled">> push_to_ecr.sh
+
     docker build -t ${ECR_REPO}/${ECR_CUSTOMER}_alpine:${alpine_version} .
-    #---TEST---#docker push ${ECR_REPO}/${ECR_CUSTOMER}_alpine:${alpine_version}
+    echo "docker push ${ECR_REPO}/${ECR_CUSTOMER}_alpine:${alpine_version}" >> push_to_ecr.sh
     docker tag ${ECR_REPO}/${ECR_CUSTOMER}_alpine:${alpine_version} ${ECR_REPO}/${ECR_CUSTOMER}_alpine:${alpine_majorversion}
-    #---TEST---#docker push ${ECR_REPO}/${ECR_CUSTOMER}_alpine:${alpine_majorversion}
+    echo "docker push ${ECR_REPO}/${ECR_CUSTOMER}_alpine:${alpine_majorversion}" >> push_to_ecr.sh
     docker tag ${ECR_REPO}/${ECR_CUSTOMER}_alpine:${alpine_version} ${ECR_REPO}/${ECR_CUSTOMER}_alpine:latest
-    #---TEST---#docker push ${ECR_REPO}/${ECR_CUSTOMER}_alpine:latest
+    echo "docker push ${ECR_REPO}/${ECR_CUSTOMER}_alpine:latest" >> push_to_ecr.sh
 
     #SAVE LAST USED DOCKER HUB VERSION alpine:latest TO ECR 
     # => Needed in next compare round.
     docker tag alpine:latest ${ECR_REPO}/docker_hub_alpine:previous_latest
-    #---TEST---#docker push ${ECR_REPO}/docker_hub_alpine:latest
+    echo "docker push ${ECR_REPO}/docker_hub_alpine:latest" >> push_to_ecr.sh
 
     #OFFER FLAG WHEN IMAGES ARE UPGRADED
     touch alpine_is_upgraded
@@ -66,7 +70,7 @@ else
     # ACTION IF customer SYSTEM UPGRADE NEEDED
     if [ ! -z "${alpine_system_upgrade}" ]
     then
-        echo "INFO: Alpine images:${ECR_REPO}/docker_hub_alpine SYSTEM UPGRADE NEEDED"
+        echo "INFO: Alpine ecr/${ECR_CUSTOMER}_alpine:latest SYSTEM UPGRADE NEEDED"
         upgrade_alpine_images
     else
         echo "INFO: NO UPGRADE NEEDED AT ALL"
