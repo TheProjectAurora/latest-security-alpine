@@ -78,6 +78,7 @@ then
     upgrade_alpine_images
 else
     echo "INFO: No changes in image! ${ECR_REPO}/docker_hub_alpine:previous_latest IS SAME THAN alpine:latest"
+    ####### ACTIVATE WHEN IN USE #######docker pull ${ECR_REPO}/${ECR_CUSTOMER}_alpine:latest
     alpine_system_upgrade=$(echo `docker run --rm -u root ${ECR_REPO}/${ECR_CUSTOMER}_alpine:latest /check_is_upgrade_needed.sh` | grep -o "SYSTEM UPGRADE NEEDED"; /bin/true)
     # ACTION IF customer SYSTEM UPGRADE NEEDED
     if [ ! -z "${alpine_system_upgrade}" ]
