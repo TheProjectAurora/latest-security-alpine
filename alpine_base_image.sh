@@ -2,24 +2,65 @@
 set -e
 rm -f alpine_is_upgraded
 
-# TESTING STARING POINT:
-###  $ docker image ls | grep alpine | grep -v python
-###  alpine                                                 3.12.1              d6e46aa2470d        6 weeks ago         5.57MB
-###  alpine                                                 latest              d6e46aa2470d        6 weeks ago         5.57MB
-###  alpine                                                 3.11                f70734b6a266        7 months ago        5.61MB
-###  ecr/docker_hub_alpine                                  previous_latest     f70734b6a266        7 months ago        5.61MB
+helpFunction()
+{
+   echo ""
+   echo "Usage: $0"
+   echo -e "\t-r <docker_registry> e.g. REGISTRY/image:tag"
+   echo -e "\t-n <customername> e.g. registry/CUSTOMERNAME_alpine:tag"
+   echo -e "\t-i rollback/initialize regitsty/docker_hub_alpine:previous_latest image that is used in next rounds"
+   echo -e "\t-t take image push to regitsty off, just to testing purposes"
+   exit 1 # Exit script after printing help
+}
 
+INITIALIZE=false
+PRODUCTION=true
+while getopts "r:n:it" opt
+do
+   case "$opt" in
+      r ) ECR_REPO="$OPTARG" ;;
+      n ) ECR_CUSTOMER="$OPTARG" ;;
+      i ) INITIALIZE=true ;;
+      t ) PRODUCTION=false ;;
+      ? ) helpFunction ;; # Print helpFunction in case parameter is non-existent
+   esac
+done
+if [ "${ECR_REPO}" == "" ];
+then
+    echo "ERROR: -r <ECR_REPO> parameter is required"
+    exit 1
+fi
+
+if [ "${ECR_CUSTOMER}" == "" ];
+then
+    echo "ERROR: -n <CUSTOMERNAME> parameter is required"
+    exit 1
+fi
+
+if [ ${INITIALIZE} = true ];
+then
+    echo "INFO: Just initialize setup"
+    docker pull docker.io/alpine:3.12.1
+    docker tag docker.io/alpine:3.12.1 ${ECR_REPO}/docker_hub_alpine:previous_latest
+    if [ ${PRODUCTION} = true ];
+    then
+        docker push ${ECR_REPO}/docker_hub_alpine:previous_latest
+    fi
+    exit 0
+fi
 
 #NOTE: CHANGE THESE BEFORE REAL USAGE
 # REMOVE FROM FILE LINE BEGINNINGS: ####### ACTIVATE WHEN IN USE #######
-ECR_REPO="ecr"
-ECR_CUSTOMER="customer"
+
 
 #DOCKER HUB alpine:latest INFORMATION
 docker pull alpine:latest
 docker_hub_hash=$(docker image ls --format "{{.ID}}" alpine:latest)
 
-####### ACTIVATE WHEN IN USE #######docker pull ${ECR_REPO}/docker_hub_alpine:previous_latest
+if [ ${PRODUCTION} = true ];
+then
+    docker pull ${ECR_REPO}/docker_hub_alpine:previous_latest
+fi
 ecr_hash=$(docker image ls --format "{{.ID}}"  ${ECR_REPO}/docker_hub_alpine:previous_latest)
 
 upgrade_alpine_images () {
@@ -77,8 +118,12 @@ then
     echo "INFO: alpine:latest image updated! => Build new versions of ${ECR_REPO}/${ECR_CUSTOMER}_alpine"
     upgrade_alpine_images
 else
-    echo "INFO: No changes in image! ${ECR_REPO}/docker_hub_alpine:previous_latest IS SAME THAN alpine:latest"
-    ####### ACTIVATE WHEN IN USE #######docker pull ${ECR_REPO}/${ECR_CUSTOMER}_alpine:latest
+    echo "INFO: No changes in alpine image, ${ECR_REPO}/docker_hub_alpine:previous_latest is same than docker.io/alpine:latest"
+    if [ ${PRODUCTION} = true ];
+    then
+        docker pull ${ECR_REPO}/${ECR_CUSTOMER}_alpine:latest
+    fi
+    echo "INFO: Check is system package upgrades needed to ${ECR_REPO}/${ECR_CUSTOMER}_alpine:latest"
     alpine_system_upgrade=$(echo `docker run --rm -u root ${ECR_REPO}/${ECR_CUSTOMER}_alpine:latest /check_is_upgrade_needed.sh` | grep -o "SYSTEM UPGRADE NEEDED"; /bin/true)
     # ACTION IF customer SYSTEM UPGRADE NEEDED
     if [ ! -z "${alpine_system_upgrade}" ]
