@@ -3,6 +3,7 @@ Script that use docker.io/alpine:latest from docker hub and solve it version by 
 If docker.io/alpine:latest is changed from previous round (registry/docker_hub_alpine:latest) it bake registry/customer_alpine:latest and registry/customer_alpine:< version > images with inbuilded security. If docker.io/alpine:latest up to date version is in use then it check registry/customer_alpine:latest system upgrades and bake new versions of registry/customer_alpine images is system upgrades to images is required. 
 
 # USAGE:
+Before use ```docker login registry``` should be executed succesfully.
 Use -t parameter if you don't wanna push images to your registry.
 ## First execution round and RE-execute with simulation when docker.io/alpine:latest is updated
 Just initialize registry/docker_hub_alpine:previous_latest to shape so it could be used in next round. 
@@ -35,15 +36,21 @@ alpine                            3.11                f70734b6a266        7 mont
 
 ## Simulation when registry/customer_alpine need system components upgrade
 Execute these with -t parameter:
-- Execute initialize phase (get registry/docker_hub_alpine:previous_latest to shape)
-- Execute EXECUTION phase (registry/docker_hub_alpine:previous_latest to shape)
+- [Execute initialize phase](https://github.com/TheProjectAurora/latestalpine#first-execution-round-and-re-execute-with-simulation-when-dockerioalpinelatest-is-updated) (get registry/docker_hub_alpine:previous_latest to shape)
+- [Execute EXECUTION phase](https://github.com/TheProjectAurora/latestalpine#execution) (registry/docker_hub_alpine:previous_latest to shape)
 - Execution phase should give result: INFO: NO UPGRADE NEEDED AT ALL
-- Execute: ```docker build -t registry/customer_alpine:latest -f testing/Dockerfile .```
-- Execute EXECUTION phase registry/docker_hub_alpine:previous_latest is on shape but it realize: INFO: Check is system package upgrades needed...
+- Execute mocking: ```docker build -t registry/customer_alpine:latest -f testing/Dockerfile .```
+- [Execute EXECUTION phase](https://github.com/TheProjectAurora/latestalpine#execution) registry/docker_hub_alpine:previous_latest is on shape but it realize: INFO: Check is system package upgrades needed...
 - It should print "INFO: SYSTEM UPGRADE NEEDED to registry/asiakas_alpine:latest" and made system upgrade by compiling whole image from scrach.
 
 ## Pipeline should look like:
-1. execute alpine_base_image.sh
-1. if alpine_is_upgraded exist then continue pipeline
+Pipeline that keep regisry/alpine:< tag > images automaticly uptodate and build in security to those.
+1. Execute: ```docker login registry```
+1. Execute alpine_base_image.sh
+1. if alpine_is_upgraded exist then continue pipeline otherwhize quit qith exit 0.
 1. Execute https://github.com/aquasecurity/trivy against registry/asiakas_alpine:latest
 1. Execute push_to_registry.sh
+RESULT it [maintain regisry/alpine:tag images automaticly](https://github.com/TheProjectAurora/latestalpine#result).
+
+# FYI
+Upstream pipelines could update check_is_upgrade_needed.sh. Add there check by using all package controll method that are used in upstream pipelines. If that package controll app need update it just need to print to STDOUT message "SYSTEM UPGRADE NEEDED". Then system upgrade checking could happened similar way than in alpine_base_image.sh in lines after "ACTION IF customer SYSTEM UPGRADE NEEDED" comment. That kind of "checking script" could be own pipeline where it check upstream image upgrade and trig upstream pipeline if that upstream componen upgrade is needed.
