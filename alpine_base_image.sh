@@ -77,29 +77,29 @@ upgrade_alpine_images () {
     echo "export BUILD_TIMESTAMP=$(date)" | tee -a alpine_information.sh
     echo "export BUILD_JOB=PIPELINE JOB NUMBER HERE" | tee -a alpine_information.sh
     #BAKE ${ECR_REPO}/customer_alpine:${alpine_version}
-    echo '#!/bin/sh' > push_to_ecr.sh
-    echo "set -xe" >> push_to_ecr.sh
-    echo "# EXECUTE https://github.com/aquasecurity/trivy BEFORE PUSH => Use push_to_ecr.sh to push." >> push_to_ecr.sh
-    echo "# Trivy have to be executed against ${ECR_REPO}/${ECR_CUSTOMER}_alpine:latest">> push_to_ecr.sh
+    echo '#!/bin/sh' > push_to_registry.sh
+    echo "set -xe" >> push_to_registry.sh
+    echo "# EXECUTE https://github.com/aquasecurity/trivy BEFORE PUSH => Use push_to_registry.sh to push." >> push_to_registry.sh
+    echo "# Trivy have to be executed against ${ECR_REPO}/${ECR_CUSTOMER}_alpine:latest">> push_to_registry.sh
 
     echo "INFO: Create images: "
     echo "INFO: Image: ${ECR_REPO}/${ECR_CUSTOMER}_alpine:${alpine_version}"
-    docker build -t ${ECR_REPO}/${ECR_CUSTOMER}_alpine:${alpine_version} .
-    echo "docker push ${ECR_REPO}/${ECR_CUSTOMER}_alpine:${alpine_version}" >> push_to_ecr.sh
+    docker build --no-cache -t ${ECR_REPO}/${ECR_CUSTOMER}_alpine:${alpine_version} .
+    echo "docker push ${ECR_REPO}/${ECR_CUSTOMER}_alpine:${alpine_version}" >> push_to_registry.sh
 
     echo "INFO: Image: ${ECR_REPO}/${ECR_CUSTOMER}_alpine:${alpine_majorversion}"
     docker tag ${ECR_REPO}/${ECR_CUSTOMER}_alpine:${alpine_version} ${ECR_REPO}/${ECR_CUSTOMER}_alpine:${alpine_majorversion}
-    echo "docker push ${ECR_REPO}/${ECR_CUSTOMER}_alpine:${alpine_majorversion}" >> push_to_ecr.sh
+    echo "docker push ${ECR_REPO}/${ECR_CUSTOMER}_alpine:${alpine_majorversion}" >> push_to_registry.sh
 
     echo "INFO: Image: ${ECR_REPO}/${ECR_CUSTOMER}_alpine:latest"
     docker tag ${ECR_REPO}/${ECR_CUSTOMER}_alpine:${alpine_version} ${ECR_REPO}/${ECR_CUSTOMER}_alpine:latest
-    echo "docker push ${ECR_REPO}/${ECR_CUSTOMER}_alpine:latest" >> push_to_ecr.sh
+    echo "docker push ${ECR_REPO}/${ECR_CUSTOMER}_alpine:latest" >> push_to_registry.sh
 
     #SAVE LAST USED DOCKER HUB VERSION alpine:latest TO ECR
     # => Needed in next compare round.
     echo "INFO: Image: ${ECR_REPO}/docker_hub_alpine:previous_latest"
     docker tag alpine:latest ${ECR_REPO}/docker_hub_alpine:previous_latest
-    echo "docker push ${ECR_REPO}/docker_hub_alpine:previous_latest" >> push_to_ecr.sh
+    echo "docker push ${ECR_REPO}/docker_hub_alpine:previous_latest" >> push_to_registry.sh
 
     #OFFER FLAG WHEN IMAGES ARE UPGRADED
     touch alpine_is_upgraded
@@ -124,7 +124,7 @@ else
     # ACTION IF customer SYSTEM UPGRADE NEEDED
     if [ ! -z "${alpine_system_upgrade}" ]
     then
-        echo "INFO: Alpine ${ECR_REPO}/${ECR_CUSTOMER}_alpine:latest SYSTEM UPGRADE NEEDED"
+        echo "INFO: SYSTEM UPGRADE NEEDED to ${ECR_REPO}/${ECR_CUSTOMER}_alpine:latest"
         upgrade_alpine_images
     else
         echo "INFO: NO UPGRADE NEEDED AT ALL"
