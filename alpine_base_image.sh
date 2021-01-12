@@ -49,10 +49,6 @@ then
     exit 0
 fi
 
-#NOTE: CHANGE THESE BEFORE REAL USAGE
-# REMOVE FROM FILE LINE BEGINNINGS: ####### ACTIVATE WHEN IN USE #######
-
-
 #DOCKER HUB alpine:latest INFORMATION
 docker pull alpine:latest
 docker_hub_hash=$(docker image ls --format "{{.ID}}" alpine:latest)
