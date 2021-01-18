@@ -1,4 +1,4 @@
-# Description;
+# Description
 Production docker images should be hardened with https://www.cisecurity.org/benchmark/docker/ rules.
 With this implementation base of hardening happened. 
 
