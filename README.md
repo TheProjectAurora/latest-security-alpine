@@ -1,3 +1,7 @@
+# Description;
+Production docker images should be hardened with https://www.cisecurity.org/benchmark/docker/ rules.
+With this implementation base of hardening happened. 
+
 # General information
 Script that use docker.io/alpine:latest from docker hub and solve it version by using docker.io/alpine:latest@/etc/alpine-release file content. 
 If docker.io/alpine:latest is changed from previous round (registry/docker_hub_alpine:latest) it bake registry/customer_alpine:latest and registry/customer_alpine:< version > images with inbuilded security. If docker.io/alpine:latest up to date version is in use then it check registry/customer_alpine:latest system upgrades and bake new versions of registry/customer_alpine images is system upgrades to images is required. 
