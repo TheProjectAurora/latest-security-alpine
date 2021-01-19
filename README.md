@@ -4,7 +4,7 @@ With this implementation base of hardening happened.
 
 # General information
 Script that use docker.io/alpine:latest from docker hub and solve it version by using docker.io/alpine:latest@/etc/alpine-release file content. 
-If docker.io/alpine:latest is changed from previous round (registry/docker_hub_alpine:latest) it bake registry/customer_alpine:latest and registry/customer_alpine:< version > images with inbuilded security. If docker.io/alpine:latest up to date version is in use then it check registry/customer_alpine:latest system upgrades and bake new versions of registry/customer_alpine images is system upgrades to images is required. 
+If docker.io/alpine:latest is changed from previous round (registry/docker_hub_alpine:latest) it bake registry/customer_alpine:latest and registry/customer_alpine:< version > images with inbuilded security. If docker.io/alpine:latest up to date version is in use then it check registry/customer_alpine:latest system upgrades and bake new versions of registry/customer_alpine images if system upgrades to images is required. 
 
 # USAGE:
 Before use ```docker login registry``` should be executed succesfully.
@@ -12,7 +12,7 @@ Use -t parameter if you don't wanna push images to your registry.
 ## First execution round and RE-execute with simulation when docker.io/alpine:latest is updated
 Just initialize registry/docker_hub_alpine:previous_latest to shape so it could be used in next round. 
 ```
-./alpine_base_image.sh -r registry -n asiakas -i
+./alpine_base_image.sh -r registry -n customer -i
 ```
 ## EXECUTION: 
 ```
@@ -45,14 +45,14 @@ Execute these with -t parameter:
 - Execution phase should give result: INFO: NO UPGRADE NEEDED AT ALL
 - Execute mocking: ```docker build -t registry/customer_alpine:latest -f testing/Dockerfile .```
 - [Execute EXECUTION phase](https://github.com/TheProjectAurora/latestalpine#execution) registry/docker_hub_alpine:previous_latest is on shape but it realize: INFO: Check is system package upgrades needed...
-- It should print "INFO: SYSTEM UPGRADE NEEDED to registry/asiakas_alpine:latest" and made system upgrade by compiling whole image from scrach.
+- It should print "INFO: SYSTEM UPGRADE NEEDED to registry/customer_alpine:latest" and made system upgrade by compiling whole image from scrach.
 
 ## Pipeline should look like:
 Pipeline that keep regisry/alpine:< tag > images automaticly uptodate and build in security to those.
 1. Execute: ```docker login registry```
 1. Execute alpine_base_image.sh
 1. if alpine_is_upgraded exist then continue pipeline otherwhize quit qith exit 0.
-1. Execute https://github.com/aquasecurity/trivy against registry/asiakas_alpine:latest
+1. Execute https://github.com/aquasecurity/trivy against registry/customer_alpine:latest
 1. Execute push_to_registry.sh
 RESULT it [maintain regisry/alpine:tag images automaticly](https://github.com/TheProjectAurora/latestalpine#result).
 
