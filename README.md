@@ -5,6 +5,7 @@ With this implementation base of hardening happened.
 # General information
 Script that use docker.io/alpine:latest from docker hub and solve it version by using docker.io/alpine:latest@/etc/alpine-release file content. 
 If docker.io/alpine:latest is changed from previous round (registry/docker_hub_alpine:latest) it bake registry/customer_alpine:latest and registry/customer_alpine:< version > images with inbuilded security. 
+
 If docker.io/alpine:latest up to date version is in use then it check registry/customer_alpine:latest system upgrades and bake new versions of registry/customer_alpine images if system upgrades to images is required. 
 
 # USAGE:
@@ -59,5 +60,7 @@ RESULT it [maintain regisry/alpine:tag images automaticly](https://github.com/Th
 
 # FYI
 Upstream pipelines could update check_is_upgrade_needed.sh. Add there check by using all package controll method that are used in upstream pipelines. If that package controll app need update it just need to print to STDOUT message "SYSTEM UPGRADE NEEDED". 
+
 Then system upgrade checking could happened similar way than in alpine_base_image.sh in lines after "ACTION IF customer SYSTEM UPGRADE NEEDED" comment. 
+
 That kind of "checking script" could be own pipeline where it check upstream image upgrade and trig upstream pipeline if that upstream componen upgrade is needed.
